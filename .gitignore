@@ -1,0 +1,5 @@
+log/
+checkpoints/
+psnr/
+trash/
+*.pyc
