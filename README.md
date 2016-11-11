@@ -3,7 +3,7 @@
 ## Overview
 This is a Tensorflow implementation for ["Accurate Image Super-Resolution Using Very Deep Convolutional Networks", CVPR 16'](http://cv.snu.ac.kr/research/VDSR/VDSR_CVPR2016.pdf).
 - [The author's project page](http://cv.snu.ac.kr/research/VDSR/)
-To download the required data for training/testing, please refer to the README.md at data directory.\
+- To download the required data for training/testing, please refer to the README.md at data directory.
 
 ## Files
 - VDSR.py : main training file.
