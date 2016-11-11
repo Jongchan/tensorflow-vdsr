@@ -5,3 +5,4 @@ data/train/
 data/test/
 *.mat
 checkpoints/*ckpt*
+psnr/*ckpt*

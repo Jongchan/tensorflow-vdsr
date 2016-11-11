@@ -13,7 +13,7 @@ IMG_SIZE = (41, 41)
 BATCH_SIZE = 64
 BASE_LR = 0.1
 LR_RATE = 0.1
-LR_STEP_SIZE = 20 #epoch
+LR_STEP_SIZE = 5 #epoch
 MAX_EPOCH = 120
 
 USE_QUEUE_LOADING = True
@@ -140,12 +140,15 @@ if __name__ == '__main__':
 				input_img	= scipy.io.loadmat(file_list[i][1])['patch'].reshape([IMG_SIZE[0], IMG_SIZE[1], 1])
 				gt_img		= scipy.io.loadmat(file_list[i][0])['patch'].reshape([IMG_SIZE[0], IMG_SIZE[1], 1])
 				sess.run(enqueue_op, feed_dict={train_input_single:input_img, train_gt_single:gt_img})
+				count+=1
 
 		if USE_QUEUE_LOADING:
 			# create threads
 			coord = tf.train.Coordinator()
-			t = threading.Thread(target=load_and_enqueue, args=(coord, train_list))
-			t.start()
+			num_thread=10
+			for i in range(num_thread):
+				t = threading.Thread(target=load_and_enqueue, args=(coord, train_list, i, num_thread))
+				t.start()
 		### WITH ASYNCHRONOUS DATA LOADING ###
 				
 		def signal_handler(signum,frame):
