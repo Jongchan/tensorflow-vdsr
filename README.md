@@ -15,20 +15,20 @@ This is a Tensorflow implementation for ["Accurate Image Super-Resolution Using 
 
 ## How To Use
 ### Training
-```python
+```shell
 # if start from scratch
 python VDSR.py
 # if start with a checkpoint
 python VDSR.py --model_path ./checkpoints/CHECKPOINT_NAME.ckpt
 ```
 ### Testing
-```python
+```shell
 # this will test all the checkpoint in ./checkpoint directory.
 # and save the results in ./psnr directory
 python TEST.py
 ```
 ### Plot Result
-```python
+```shell
 # plot the psnr result stored in ./psnr directory
 python PLOT.py
 ```
