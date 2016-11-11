@@ -1,6 +1,4 @@
 log/
-checkpoints/
-psnr/
 trash/
 *.pyc
 data/train/
