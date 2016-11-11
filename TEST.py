@@ -1,5 +1,4 @@
 import numpy as np
-import cv2
 from scipy import misc
 from PIL import Image
 import tensorflow as tf
@@ -9,7 +8,7 @@ import scipy.io
 import pickle
 from MODEL import model
 from MODEL_FACTORIZED import model_factorized
-DATA_PATH = "/home/jongchan/Projects/SRCNN/VDSR_SNU/gt_y/"
+DATA_PATH = "./data/test/"
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -82,5 +81,5 @@ if __name__ == '__main__':
 	model_list = [fn for fn in model_list if not os.path.basename(fn).endswith("meta")]
 	with tf.Session() as sess:
 		for model_ckpt in model_list:
-			print model_ckpt
+			print "Testing model",model_ckpt
 			test_VDSR_with_sess(80, model_ckpt, DATA_PATH,sess)

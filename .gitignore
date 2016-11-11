@@ -3,3 +3,7 @@ checkpoints/
 psnr/
 trash/
 *.pyc
+data/train/
+data/test/
+*.mat
+checkpoints/*ckpt*
