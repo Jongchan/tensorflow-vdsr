@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pickle, glob
 import numpy as np
 import sys
-psnr_prefix = './psnr/VDSR_epoch_*'
+psnr_prefix = './psnr/VDSR_const_clip_0.01_epoch_*'
 psnr_paths = sorted(glob.glob(psnr_prefix))
 
 psnr_means = {}

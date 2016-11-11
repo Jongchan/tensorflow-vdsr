@@ -9,7 +9,7 @@ from MODEL_FACTORIZED import model_factorized
 DATA_PATH = "/home/jongchan/Projects/SRCNN/VDSR_SNU/aug_more/"
 IMG_SIZE = (41, 41)
 BATCH_SIZE = 64
-BASE_LR = 0.001
+BASE_LR = 0.1
 LR_RATE = 0.1
 LR_STEP_SIZE = 20 #epoch
 MAX_EPOCH = 120
@@ -111,7 +111,7 @@ if __name__ == '__main__':
 	tvars = tf.trainable_variables()
 	gvs = zip(tf.gradients(loss,tvars), tvars)
 	norm = 0.1*BASE_LR
-	capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
+	capped_gvs = [(tf.clip_by_norm(grad, 0.01), var) for grad, var in gvs]
 	opt = optimizer.apply_gradients(capped_gvs, global_step=global_step)
 	"""
 	tvars = tf.trainable_variables()
@@ -125,7 +125,7 @@ if __name__ == '__main__':
 		tf.initialize_all_variables().run()
 		def signal_handler(signum,frame):
 			print "stop training, save checkpoint..."
-			saver.save(sess, "./checkpoints/VDSR_FAC_14_epoch_%03d.ckpt" % epoch,global_step=global_step)
+			saver.save(sess, "./checkpoints/VDSR_const_clip_epoch_%03d.ckpt" % epoch ,global_step=global_step)
 			print "Done"
 			sys.exit(1)
 		original_sigint = signal.getsignal(signal.SIGINT)
@@ -149,5 +149,5 @@ if __name__ == '__main__':
 				print "[epoch %2.4f] loss %.4f\t lr %.5f"%(epoch+(float(step)*BATCH_SIZE/len(train_list)), np.sum(l)/BATCH_SIZE, lr)
 				del input_data, gt_data, cbcr_data
 
-			saver.save(sess, "./checkpoints/VDSR_epoch_%03d.ckpt" % epoch ,global_step=global_step)
+			saver.save(sess, "./checkpoints/VDSR_const_clip_0.01_epoch_%03d.ckpt" % epoch ,global_step=global_step)
 
