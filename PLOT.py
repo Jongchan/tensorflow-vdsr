@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import pickle, glob
 import numpy as np
 import sys
-psnr_prefix = './psnr/VDSR_const_clip_0.01_epoch_*'
+psnr_prefix = './psnr/VDSR_const_clip_0.01_10_epoch_*'
 psnr_paths = sorted(glob.glob(psnr_prefix))
 
 psnr_means = {}
@@ -60,7 +60,7 @@ for i, key in enumerate(keys):
 		vdsr_mean_2.append(psnr_dict[epoch][0][1])
 		vdsr_mean_3.append(psnr_dict[epoch][1][1])
 		vdsr_mean_4.append(psnr_dict[epoch][2][1])
-
+	"""
 	plt.figure(i)
 	print key
 	print len(x_axis), len(bicub_mean), len(vdsr_mean_2)
@@ -72,6 +72,7 @@ for i, key in enumerate(keys):
 	lines_bicub = plt.plot(vdsr_mean_4, 'b', vdsr_mean_3, 'y')
 	plt.setp(lines_bicub, linewidth=3.0)
 	plt.show()
+	"""
 
 """
 psnr_means :

@@ -2,6 +2,7 @@ log/
 trash/
 *.pyc
 data/train/
+data/train
 data/test/
 *.mat
 checkpoints/*ckpt*
