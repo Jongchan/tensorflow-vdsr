@@ -77,7 +77,7 @@ def test_VDSR(epoch, ckpt_path, data_path):
 	with tf.Session() as sess:
 		test_VDSR_with_sess(epoch, ckpt_path, data_path, sess)
 if __name__ == '__main__':
-	model_list = sorted(glob.glob("./checkpoints/VDSR_const_clip_0.01_10_epoch_*"))
+	model_list = sorted(glob.glob("./checkpoints/VDSR_xavier__epoch_*"))
 	model_list = [fn for fn in model_list if not os.path.basename(fn).endswith("meta")]
 	with tf.Session() as sess:
 		for model_ckpt in model_list:

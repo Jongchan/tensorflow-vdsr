@@ -93,7 +93,7 @@ if __name__ == '__main__':
     
 		train_input_single  = tf.placeholder(tf.float32, shape=(IMG_SIZE[0], IMG_SIZE[1], 1))
 		train_gt_single  	= tf.placeholder(tf.float32, shape=(IMG_SIZE[0], IMG_SIZE[1], 1))
-		q = tf.FIFOQueue(2000, [tf.float32, tf.float32], [[IMG_SIZE[0], IMG_SIZE[1], 1], [IMG_SIZE[0], IMG_SIZE[1], 1]])
+		q = tf.FIFOQueue(10000, [tf.float32, tf.float32], [[IMG_SIZE[0], IMG_SIZE[1], 1], [IMG_SIZE[0], IMG_SIZE[1], 1]])
 		enqueue_op = q.enqueue([train_input_single, train_gt_single])
     
 		train_input, train_gt	= q.dequeue_many(BATCH_SIZE)
@@ -115,8 +115,8 @@ if __name__ == '__main__':
 
 	tvars = tf.trainable_variables()
 	gvs = zip(tf.gradients(loss,tvars), tvars)
-	norm = 0.1*BASE_LR
-	capped_gvs = [(tf.clip_by_norm(grad, 0.1), var) for grad, var in gvs]
+	norm = 0.1
+	capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
 	opt = optimizer.apply_gradients(capped_gvs, global_step=global_step)
 
 	saver = tf.train.Saver(weights, max_to_keep=0)
@@ -145,7 +145,7 @@ if __name__ == '__main__':
 		if USE_QUEUE_LOADING:
 			# create threads
 			coord = tf.train.Coordinator()
-			num_thread=10
+			num_thread=5
 			for i in range(num_thread):
 				t = threading.Thread(target=load_and_enqueue, args=(coord, train_list, i, num_thread))
 				t.start()
@@ -154,6 +154,7 @@ if __name__ == '__main__':
 		def signal_handler(signum,frame):
 			print "stop training, save checkpoint..."
 			saver.save(sess, "./checkpoints/VDSR_const_clip_epoch_%03d.ckpt" % epoch ,global_step=global_step)
+			coord.join()
 			print "Done"
 			sys.exit(1)
 		original_sigint = signal.getsignal(signal.SIGINT)
@@ -164,7 +165,7 @@ if __name__ == '__main__':
 				for step in range(len(train_list)//BATCH_SIZE):
 					_,l,output,lr, g_step = sess.run([opt, loss, train_output, learning_rate, global_step])
 					print "[epoch %2.4f] loss %.4f\t lr %.5f"%(epoch+(float(step)*BATCH_SIZE/len(train_list)), np.sum(l)/BATCH_SIZE, lr)
-				saver.save(sess, "./checkpoints/VDSR_const_clip_0.01_10_epoch_%03d.ckpt" % epoch ,global_step=global_step)
+				saver.save(sess, "./checkpoints/VDSR_xavier__epoch_%03d.ckpt" % epoch ,global_step=global_step)
 		else:
 			for epoch in xrange(0, MAX_EPOCH):
 				for step in range(len(train_list)//BATCH_SIZE):
