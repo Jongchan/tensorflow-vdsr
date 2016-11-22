@@ -34,6 +34,22 @@ python PLOT.py
 ```
 
 ## Result
+The checkpoint is file is [here](https://drive.google.com/file/d/0B4KsMpU0BeosQS1tMWpUZmlBM1E/view?usp=sharing)
+##### Results on Set 5
+
+|  Scale    | Bicubic | VDSR | tf_VDSR |
+|:---------:|:-------:|:----:|:-------:|
+| **2x** - PSNR/SSIM|   33.66/0.9929	|   37.53/0.9587	|  37.16 |
+| **3x** - PSNR/SSIM|   30.39/0.8682	|   33.66/0.9213	|  33.32 |
+| **4x** - PSNR/SSIM|   28.42/0.8104	|   31.35/0.8838	|  31.03 |
+
+##### Results on Set 14
+
+|  Scale    | Bicubic | VDSR | tf_VDSR |
+|:---------:|:-------:|:----:|:-------:|
+| **2x** - PSNR/SSIM|   30.24/0.8688	|   33.03/0.9124	| 32.81 |
+| **3x** - PSNR/SSIM|   27.55/0.7742	|   29.77/0.8314	| 29.62 |
+| **4x** - PSNR/SSIM|   26.00/0.7027	|   28.01/0.7674	| 27.83 |
 
 ## Remarks
 - The training is further accelerated with asynchronous data fetch.
