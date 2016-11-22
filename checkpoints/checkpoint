@@ -1,2 +1,2 @@
-model_checkpoint_path: "VDSR_xavier__epoch_119.ckpt-201840"
-all_model_checkpoint_paths: "VDSR_xavier__epoch_119.ckpt-201840"
+model_checkpoint_path: "VDSR_const_clip_epoch_067.ckpt-16864"
+all_model_checkpoint_paths: "VDSR_const_clip_epoch_067.ckpt-16864"

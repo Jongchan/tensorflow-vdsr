@@ -7,3 +7,4 @@ data/test
 *.mat
 checkpoints/*ckpt*
 psnr/*ckpt*
+preserve.zip

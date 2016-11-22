@@ -81,5 +81,6 @@ if __name__ == '__main__':
 	model_list = [fn for fn in model_list if not os.path.basename(fn).endswith("meta")]
 	with tf.Session() as sess:
 		for model_ckpt in model_list:
+			epoch = int(model_ckpt.split('epoch_')[-1].split('.ckpt')[0])
 			print "Testing model",model_ckpt
 			test_VDSR_with_sess(80, model_ckpt, DATA_PATH,sess)

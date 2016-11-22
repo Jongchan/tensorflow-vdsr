@@ -11,7 +11,7 @@ from TEST import test_VDSR
 DATA_PATH = "./data/train/"
 IMG_SIZE = (41, 41)
 BATCH_SIZE = 64
-BASE_LR = 0.1
+BASE_LR = 0.0001
 LR_RATE = 0.1
 LR_STEP_SIZE = 20 #epoch
 MAX_EPOCH = 120
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     
 		train_input_single  = tf.placeholder(tf.float32, shape=(IMG_SIZE[0], IMG_SIZE[1], 1))
 		train_gt_single  	= tf.placeholder(tf.float32, shape=(IMG_SIZE[0], IMG_SIZE[1], 1))
-		q = tf.FIFOQueue(2000, [tf.float32, tf.float32], [[IMG_SIZE[0], IMG_SIZE[1], 1], [IMG_SIZE[0], IMG_SIZE[1], 1]])
+		q = tf.FIFOQueue(10000, [tf.float32, tf.float32], [[IMG_SIZE[0], IMG_SIZE[1], 1], [IMG_SIZE[0], IMG_SIZE[1], 1]])
 		enqueue_op = q.enqueue([train_input_single, train_gt_single])
     
 		train_input, train_gt	= q.dequeue_many(BATCH_SIZE)
@@ -136,8 +136,9 @@ if __name__ == '__main__':
 		### WITH ASYNCHRONOUS DATA LOADING ###
 		def load_and_enqueue(coord, file_list, idx=0, num_thread=1):
 			count = 0;
+			length = len(file_list)
 			while not coord.should_stop():
-				i = (count*num_thread + idx) % len(train_list);
+				i = (count*num_thread + idx) % length;
 				input_img	= scipy.io.loadmat(file_list[i][1])['patch'].reshape([IMG_SIZE[0], IMG_SIZE[1], 1])
 				gt_img		= scipy.io.loadmat(file_list[i][0])['patch'].reshape([IMG_SIZE[0], IMG_SIZE[1], 1])
 				sess.run(enqueue_op, feed_dict={train_input_single:input_img, train_gt_single:gt_img})
@@ -146,7 +147,7 @@ if __name__ == '__main__':
 		if USE_QUEUE_LOADING:
 			# create threads
 			coord = tf.train.Coordinator()
-			num_thread=20
+			num_thread=50
 			for i in range(num_thread):
 				t = threading.Thread(target=load_and_enqueue, args=(coord, train_list, i, num_thread))
 				t.start()
@@ -162,7 +163,7 @@ if __name__ == '__main__':
 		signal.signal(signal.SIGINT, signal_handler)
 
 		if USE_QUEUE_LOADING:
-			for epoch in xrange(0, MAX_EPOCH):
+			for epoch in xrange(62, MAX_EPOCH):
 				for step in range(len(train_list)//BATCH_SIZE):
 					_,l,output,lr, g_step = sess.run([opt, loss, train_output, learning_rate, global_step])
 					print "[epoch %2.4f] loss %.4f\t lr %.5f"%(epoch+(float(step)*BATCH_SIZE/len(train_list)), np.sum(l)/BATCH_SIZE, lr)
