@@ -3,7 +3,7 @@ trash/
 *.pyc
 data/train/
 data/train
-data/test/
+data/test
 *.mat
 checkpoints/*ckpt*
 psnr/*ckpt*
