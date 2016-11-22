@@ -11,7 +11,7 @@ from TEST import test_VDSR
 DATA_PATH = "./data/train/"
 IMG_SIZE = (41, 41)
 BATCH_SIZE = 64
-BASE_LR = 0.0001
+BASE_LR = 0.1
 LR_RATE = 0.1
 LR_STEP_SIZE = 20 #epoch
 MAX_EPOCH = 120
@@ -163,7 +163,7 @@ if __name__ == '__main__':
 		signal.signal(signal.SIGINT, signal_handler)
 
 		if USE_QUEUE_LOADING:
-			for epoch in xrange(62, MAX_EPOCH):
+			for epoch in xrange(0, MAX_EPOCH):
 				for step in range(len(train_list)//BATCH_SIZE):
 					_,l,output,lr, g_step = sess.run([opt, loss, train_output, learning_rate, global_step])
 					print "[epoch %2.4f] loss %.4f\t lr %.5f"%(epoch+(float(step)*BATCH_SIZE/len(train_list)), np.sum(l)/BATCH_SIZE, lr)
