@@ -1,2 +1,2 @@
-model_checkpoint_path: "VDSR_const_clip_epoch_067.ckpt-16864"
-all_model_checkpoint_paths: "VDSR_const_clip_epoch_067.ckpt-16864"
+model_checkpoint_path: "VDSR_norm_0.01_epoch_065.ckpt-222024"
+all_model_checkpoint_paths: "VDSR_norm_0.01_epoch_065.ckpt-222024"
