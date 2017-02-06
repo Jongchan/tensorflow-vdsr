@@ -4,6 +4,9 @@ trash/
 data/train/
 data/train
 data/test
+data/Set*
+data/291
+data/91
 *.mat
 checkpoints/*ckpt*
 psnr/*ckpt*

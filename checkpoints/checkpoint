@@ -1,2 +1,2 @@
-model_checkpoint_path: "VDSR_norm_0.01_epoch_065.ckpt-222024"
-all_model_checkpoint_paths: "VDSR_norm_0.01_epoch_065.ckpt-222024"
+model_checkpoint_path: "VDSR_adam_epoch_021.ckpt-74008"
+all_model_checkpoint_paths: "VDSR_adam_epoch_021.ckpt-74008"

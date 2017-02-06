@@ -12,9 +12,13 @@ from TEST import test_VDSR
 DATA_PATH = "./data/train/"
 IMG_SIZE = (41, 41)
 BATCH_SIZE = 64
-BASE_LR = 0.1
+USE_ADAM_OPT = True
+if USE_ADAM_OPT:
+	BASE_LR = 0.00001
+else:
+	BASE_LR = 0.1
 LR_RATE = 0.1
-LR_STEP_SIZE = 20 #epoch
+LR_STEP_SIZE = 10 #epoch
 MAX_EPOCH = 120
 
 USE_QUEUE_LOADING = True
@@ -112,16 +116,21 @@ if __name__ == '__main__':
 	global_step 	= tf.Variable(0, trainable=False)
 	learning_rate 	= tf.train.exponential_decay(BASE_LR, global_step*BATCH_SIZE, len(train_list)*LR_STEP_SIZE, LR_RATE, staircase=True)
 
-	optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9)
+	if USE_ADAM_OPT:
+		optimizer = tf.train.AdamOptimizer(learning_rate)#tf.train.MomentumOptimizer(learning_rate, 0.9)
+		opt = optimizer.minimize(loss, global_step=global_step)
+	else:
+		optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9)
 
-	lr = BASE_LR
-	BASE_NORM = 0.02
-	tvars = tf.trainable_variables()
-	gvs = zip(tf.gradients(loss,tvars), tvars)
-	norm = BASE_NORM*BASE_LR/lr
-	capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
-	capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
-	opt = optimizer.apply_gradients(capped_gvs, global_step=global_step)
+		lr = BASE_LR
+		BASE_NORM = 0.1
+		tvars = tf.trainable_variables()
+		gvs = zip(tf.gradients(loss,tvars), tvars)
+		#norm = BASE_NORM*BASE_LR/lr
+		#capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
+		norm = 0.01
+		capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
+		opt = optimizer.apply_gradients(capped_gvs, global_step=global_step)
 
 	saver = tf.train.Saver(weights, max_to_keep=0)
 
@@ -188,7 +197,7 @@ if __name__ == '__main__':
 		if USE_QUEUE_LOADING:
 			lrr = BASE_LR
 			for epoch in xrange(0, MAX_EPOCH):
-				if epoch%20==0:
+				if epoch%LR_STEP_SIZE==0:
 
 					train_input_single  = tf.placeholder(tf.float32, shape=(IMG_SIZE[0], IMG_SIZE[1], 1))
 					train_gt_single  	= tf.placeholder(tf.float32, shape=(IMG_SIZE[0], IMG_SIZE[1], 1))
@@ -204,14 +213,19 @@ if __name__ == '__main__':
 					for w in weights:
 						loss += tf.nn.l2_loss(w)*1e-4
                 
-					BASE_NORM = 0.1
-					tvars = tf.trainable_variables()
-					gvs = zip(tf.gradients(loss,tvars), tvars)
-
-
-					norm = BASE_NORM*BASE_LR/lrr
-					capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
-					opt = optimizer.apply_gradients(capped_gvs, global_step=global_step)
+					if USE_ADAM_OPT:
+						opt = optimizer.minimize(loss, global_step=global_step)
+					else:
+                
+						lr = BASE_LR
+						BASE_NORM = 0.1
+						tvars = tf.trainable_variables()
+						gvs = zip(tf.gradients(loss,tvars), tvars)
+						#norm = BASE_NORM*BASE_LR/lr
+						#capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
+						norm = 0.01
+						capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
+						opt = optimizer.apply_gradients(capped_gvs, global_step=global_step)
 
 				# create threads
 				num_thread=20
@@ -232,8 +246,8 @@ if __name__ == '__main__':
 					_,l,output,lr, g_step = sess.run([opt, loss, train_output, learning_rate, global_step])
 					print "[epoch %2.4f] loss %.4f\t lr %.5f"%(epoch+(float(step)*BATCH_SIZE/len(train_list)), np.sum(l)/BATCH_SIZE, lr)
 					#print "[epoch %2.4f] loss %.4f\t lr %.5f\t norm %.2f"%(epoch+(float(step)*BATCH_SIZE/len(train_list)), np.sum(l)/BATCH_SIZE, lr, norm)
-				saver.save(sess, "./checkpoints/VDSR_norm_0.01_epoch_%03d.ckpt" % epoch ,global_step=global_step)
-				if epoch%20==19:
+				saver.save(sess, "./checkpoints/VDSR_adam_epoch_%03d.ckpt" % epoch ,global_step=global_step)
+				if epoch%LR_STEP_SIZE==19:
 					sess.run(q.close(cancel_pending_enqueues=True))
 					print "request stop..."
 					coord.request_stop()

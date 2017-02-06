@@ -1,6 +1,6 @@
 
-target = 'Set5';
-dataDir = fullfile('TEST_DATA_DIR', target);
+target = 'Set14';
+dataDir = fullfile('./', target);
 count = 0;
 f_lst = dir(fullfile(dataDir, '*.bmp'));
 folder = fullfile('test', target);

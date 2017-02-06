@@ -7,7 +7,8 @@ from PSNR import psnr
 import scipy.io
 import pickle
 from MODEL import model
-from MODEL_FACTORIZED import model_factorized
+#from MODEL_FACTORIZED import model_factorized
+import time
 DATA_PATH = "./data/test/"
 
 import argparse
@@ -56,9 +57,13 @@ def test_VDSR_with_sess(epoch, ckpt_path, data_path,sess):
 			input_list, gt_list, scale_list = get_test_image(img_list, i, 1)
 			input_y = input_list[0]
 			gt_y = gt_list[0]
-        	
+			start_t = time.time()
 			img_vdsr_y = sess.run([output_tensor], feed_dict={input_tensor: np.resize(input_y, (1, input_y.shape[0], input_y.shape[1], 1))})
 			img_vdsr_y = np.resize(img_vdsr_y, (input_y.shape[0], input_y.shape[1]))
+			end_t = time.time()
+			print "end_t",end_t,"start_t",start_t
+			print "time consumption",end_t-start_t
+			print "image_size", input_y.shape
 			
 			psnr_bicub = psnr(input_y, gt_y, scale_list[0])
 			psnr_vdsr = psnr(img_vdsr_y, gt_y, scale_list[0])
@@ -71,16 +76,17 @@ def test_VDSR(epoch, ckpt_path, data_path):
 	with tf.Session() as sess:
 		test_VDSR_with_sess(epoch, ckpt_path, data_path, sess)
 if __name__ == '__main__':
-	model_list = sorted(glob.glob("./checkpoints/VDSR_norm_0.01_epoch_*"))
+	model_list = sorted(glob.glob("./checkpoints/VDSR_adam_epoch_*"))
 	model_list = [fn for fn in model_list if not os.path.basename(fn).endswith("meta")]
 	with tf.Session() as sess:
 		input_tensor  			= tf.placeholder(tf.float32, shape=(1, None, None, 1))
 		shared_model = tf.make_template('shared_model', model)
 		output_tensor, weights 	= shared_model(input_tensor)
-		#output_tensor, weights 	= model_factorized(input_tensor)
+		#output_tensor, weights 	= model(input_tensor)
 		saver = tf.train.Saver(weights)
 		tf.initialize_all_variables().run()
 		for model_ckpt in model_list:
+			print model_ckpt
 			epoch = int(model_ckpt.split('epoch_')[-1].split('.ckpt')[0])
 			#if epoch<60:
 			#	continue

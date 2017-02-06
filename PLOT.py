@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pickle, glob
 import numpy as np
 import sys
-psnr_prefix = './psnr/VDSR_norm_0.01_epoch_*'
+psnr_prefix = './psnr/*'
 psnr_paths = sorted(glob.glob(psnr_prefix))
 
 psnr_means = {}
@@ -70,7 +70,7 @@ for i, key in enumerate(keys):
 	lines_bicub = plt.plot(vdsr_mean_2, 'g')
 	lines_bicub = plt.plot(vdsr_mean_4, 'b', vdsr_mean_3, 'y')
 	plt.setp(lines_bicub, linewidth=3.0)
-	plt.show()
+	#plt.show()
 
 """
 psnr_means :
