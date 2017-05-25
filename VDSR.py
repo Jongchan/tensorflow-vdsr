@@ -12,17 +12,12 @@ from TEST import test_VDSR
 DATA_PATH = "./data/train/"
 IMG_SIZE = (41, 41)
 BATCH_SIZE = 64
-USE_ADAM_OPT = True
-if USE_ADAM_OPT:
-	BASE_LR = 0.00001
-else:
-	BASE_LR = 0.1
+BASE_LR = 0.00001
 LR_RATE = 0.1
 LR_STEP_SIZE = 10 #epoch
 MAX_EPOCH = 120
 
 USE_QUEUE_LOADING = True
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_path")
@@ -109,28 +104,17 @@ if __name__ == '__main__':
 	shared_model = tf.make_template('shared_model', model)
 	#train_output, weights 	= model(train_input)
 	train_output, weights 	= shared_model(train_input)
-	loss = tf.reduce_sum(tf.nn.l2_loss(tf.sub(train_output, train_gt)))
+	loss = tf.reduce_sum(tf.nn.l2_loss(tf.subtract(train_output, train_gt)))
 	for w in weights:
 		loss += tf.nn.l2_loss(w)*1e-4
+	tf.summary.scalar("loss", loss)
 
 	global_step 	= tf.Variable(0, trainable=False)
 	learning_rate 	= tf.train.exponential_decay(BASE_LR, global_step*BATCH_SIZE, len(train_list)*LR_STEP_SIZE, LR_RATE, staircase=True)
+	tf.summary.scalar("learning rate", learning_rate)
 
-	if USE_ADAM_OPT:
-		optimizer = tf.train.AdamOptimizer(learning_rate)#tf.train.MomentumOptimizer(learning_rate, 0.9)
-		opt = optimizer.minimize(loss, global_step=global_step)
-	else:
-		optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9)
-
-		lr = BASE_LR
-		BASE_NORM = 0.1
-		tvars = tf.trainable_variables()
-		gvs = zip(tf.gradients(loss,tvars), tvars)
-		#norm = BASE_NORM*BASE_LR/lr
-		#capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
-		norm = 0.01
-		capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
-		opt = optimizer.apply_gradients(capped_gvs, global_step=global_step)
+	optimizer = tf.train.AdamOptimizer(learning_rate)#tf.train.MomentumOptimizer(learning_rate, 0.9)
+	opt = optimizer.minimize(loss, global_step=global_step)
 
 	saver = tf.train.Saver(weights, max_to_keep=0)
 
@@ -139,6 +123,12 @@ if __name__ == '__main__':
 	#config.operation_timeout_in_ms=10000
 
 	with tf.Session(config=config) as sess:
+		#TensorBoard open log with "tensorboard --logdir=logs"
+		if not os.path.exists('logs'):
+			os.mkdir('logs')
+		merged = tf.summary.merge_all()
+		file_writer = tf.summary.FileWriter('logs', sess.graph)
+
 		tf.initialize_all_variables().run()
 
 		if model_path:
@@ -147,45 +137,21 @@ if __name__ == '__main__':
 			print "Done"
 
 		### WITH ASYNCHRONOUS DATA LOADING ###
-		"""
-		def load_and_enqueue(coord, file_list, idx=0, num_thread=1):
-			count = 0;
-			length = len(file_list)
-			while not coord.should_stop():
-				i = (count*num_thread + idx) % length;
-				input_img	= scipy.io.loadmat(file_list[i][1])['patch'].reshape([IMG_SIZE[0], IMG_SIZE[1], 1])
-				gt_img		= scipy.io.loadmat(file_list[i][0])['patch'].reshape([IMG_SIZE[0], IMG_SIZE[1], 1])
-				sess.run(enqueue_op, feed_dict={train_input_single:input_img, train_gt_single:gt_img})
-				count+=1
-		"""
 		def load_and_enqueue(coord, file_list, enqueue_op, train_input_single, train_gt_single, idx=0, num_thread=1):
 			count = 0;
 			length = len(file_list)
 			try:
 				while not coord.should_stop():
 					i = count % length;
-					#i = random.randint(0, length-1)
 					input_img	= scipy.io.loadmat(file_list[i][1])['patch'].reshape([IMG_SIZE[0], IMG_SIZE[1], 1])
 					gt_img		= scipy.io.loadmat(file_list[i][0])['patch'].reshape([IMG_SIZE[0], IMG_SIZE[1], 1])
 					sess.run(enqueue_op, feed_dict={train_input_single:input_img, train_gt_single:gt_img})
 					count+=1
 			except Exception as e:
 				print "stopping...", idx, e
-		"""
-		if USE_QUEUE_LOADING:
-			# create threads
-			coord = tf.train.Coordinator()
-			num_thread=1
-			for i in range(num_thread):
-				length = len(train_list)/num_thread
-				t = threading.Thread(target=load_and_enqueue, args=(coord, train_list[i*length:(i+1)*length], i, num_thread))
-				t.start()
-		"""
 		### WITH ASYNCHRONOUS DATA LOADING ###
 		threads = []
 		def signal_handler(signum,frame):
-			#print "stop training, save checkpoint..."
-			#saver.save(sess, "./checkpoints/VDSR_norm_clip_epoch_%03d.ckpt" % epoch ,global_step=global_step)
 			sess.run(q.close(cancel_pending_enqueues=True))
 			coord.request_stop()
 			coord.join(threads)
@@ -195,65 +161,24 @@ if __name__ == '__main__':
 		signal.signal(signal.SIGINT, signal_handler)
 
 		if USE_QUEUE_LOADING:
-			lrr = BASE_LR
+			# create threads
+			num_thread=20
+			coord = tf.train.Coordinator()
+			for i in range(num_thread):
+				length = len(train_list)/num_thread
+				t = threading.Thread(target=load_and_enqueue, args=(coord, train_list[i*length:(i+1)*length],enqueue_op, train_input_single, train_gt_single,  i, num_thread))
+				threads.append(t)
+				t.start()
+			print "num thread:" , len(threads)
+
 			for epoch in xrange(0, MAX_EPOCH):
-				if epoch%LR_STEP_SIZE==0:
-
-					train_input_single  = tf.placeholder(tf.float32, shape=(IMG_SIZE[0], IMG_SIZE[1], 1))
-					train_gt_single  	= tf.placeholder(tf.float32, shape=(IMG_SIZE[0], IMG_SIZE[1], 1))
-					q = tf.FIFOQueue(1000, [tf.float32, tf.float32], [[IMG_SIZE[0], IMG_SIZE[1], 1], [IMG_SIZE[0], IMG_SIZE[1], 1]])
-					enqueue_op = q.enqueue([train_input_single, train_gt_single])
-                
-					train_input, train_gt	= q.dequeue_many(BATCH_SIZE)
-                
-					### WITH ASYNCHRONOUS DATA LOADING ###
-                
-					train_output, weights 	= shared_model(train_input)
-					loss = tf.reduce_sum(tf.nn.l2_loss(tf.sub(train_output, train_gt)))
-					for w in weights:
-						loss += tf.nn.l2_loss(w)*1e-4
-                
-					if USE_ADAM_OPT:
-						opt = optimizer.minimize(loss, global_step=global_step)
-					else:
-                
-						lr = BASE_LR
-						BASE_NORM = 0.1
-						tvars = tf.trainable_variables()
-						gvs = zip(tf.gradients(loss,tvars), tvars)
-						#norm = BASE_NORM*BASE_LR/lr
-						#capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
-						norm = 0.01
-						capped_gvs = [(tf.clip_by_norm(grad, norm), var) for grad, var in gvs]
-						opt = optimizer.apply_gradients(capped_gvs, global_step=global_step)
-
-				# create threads
-				num_thread=20
-				print "num thread:" , len(threads)
-				del threads[:]
-				coord = tf.train.Coordinator()
-				print "delete threads..."
-				print "num thread:" , len(threads)
-				for i in range(num_thread):
-					length = len(train_list)/num_thread
-					t = threading.Thread(target=load_and_enqueue, args=(coord, train_list[i*length:(i+1)*length],enqueue_op, train_input_single, train_gt_single,  i, num_thread))
-					threads.append(t)
-					t.start()
-
-
-
-				for step in range(len(train_list)//BATCH_SIZE):
-					_,l,output,lr, g_step = sess.run([opt, loss, train_output, learning_rate, global_step])
+				max_step=len(train_list)//BATCH_SIZE
+				for step in range(max_step):
+					_,l,output,lr, g_step, summary = sess.run([opt, loss, train_output, learning_rate, global_step, merged])
 					print "[epoch %2.4f] loss %.4f\t lr %.5f"%(epoch+(float(step)*BATCH_SIZE/len(train_list)), np.sum(l)/BATCH_SIZE, lr)
+					file_writer.add_summary(summary, step+epoch*max_step)
 					#print "[epoch %2.4f] loss %.4f\t lr %.5f\t norm %.2f"%(epoch+(float(step)*BATCH_SIZE/len(train_list)), np.sum(l)/BATCH_SIZE, lr, norm)
 				saver.save(sess, "./checkpoints/VDSR_adam_epoch_%03d.ckpt" % epoch ,global_step=global_step)
-				if epoch%LR_STEP_SIZE==19:
-					sess.run(q.close(cancel_pending_enqueues=True))
-					print "request stop..."
-					coord.request_stop()
-					print "join threads..."
-					coord.join(threads, stop_grace_period_secs=10)
-					lrr = lrr/10
 		else:
 			for epoch in xrange(0, MAX_EPOCH):
 				for step in range(len(train_list)//BATCH_SIZE):
