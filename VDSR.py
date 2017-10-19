@@ -12,9 +12,9 @@ from TEST import test_VDSR
 DATA_PATH = "./data/train/"
 IMG_SIZE = (41, 41)
 BATCH_SIZE = 64
-BASE_LR = 0.00001
+BASE_LR = 0.0001
 LR_RATE = 0.1
-LR_STEP_SIZE = 10 #epoch
+LR_STEP_SIZE = 120
 MAX_EPOCH = 120
 
 USE_QUEUE_LOADING = True
